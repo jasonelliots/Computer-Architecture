@@ -60,8 +60,18 @@ but you'll have to implement those three above instructions first!
 ## Step 0: IMPORTANT: inventory what is here!
 
 * Make a list of files here.
+  lsy.py => imports and runs cpu.py
+  cpu.py => contains cpu functionality 
+  FAQ => general questions about this project and CPUs
+  LS8-spec => specific details on this project (acronyms, functions, etc.)
 * Write a short 3-10-word description of what each file does.
 * Note what has been implemented, and what hasn't.
+  already implemented:
+    hardcoded memory array with binary values 
+  to be implemented:
+    contstructor
+    ram functions 
+    run() method (main logic)
 * Read this whole file.
 * Skim the spec.
 
