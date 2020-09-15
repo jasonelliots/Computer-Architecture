@@ -1,0 +1,136 @@
+Bitwise Operations
+------------------
+
+Math ops that work 1 bit at a time in a number.
+
+A  B   A & B   (& is bitwise AND)
+--------------
+0  0     0
+0  1     0
+1  0     0
+1  1     1
+
+A  B   A | B   (| is bitwise OR)
+--------------
+0  0     0
+0  1     1
+1  0     1
+1  1     1
+
+A  B   A ^ B   (^ is bitwise XOR, "exclusive OR")
+--------------
+0  0     0
+0  1     1
+1  0     1
+1  1     0
+
+
+A   ~A   (~ is bitwise NOT)
+------
+0    1
+1    0
+
+  0b01010101
+& 0b11100011
+------------
+  0b01000001 == 64
+
+In general:
+
+OR can be used to set bits to 1
+AND can be used to clear bits to 0
+
+      vv
+  0b111001
+& 0b110011  "AND mask"--stencil
+----------
+  0b110001
+      ^^
+
+      vv
+  0b111001
+| 0b001100  Use OR to force these two bits to 1 in the output
+----------
+  0b111101
+      ^^
+
+Bit shifting
+------------
+
+  111001  >> shift right
+  011100  << shift left
+  001110
+  000111
+  000011
+  000001
+  000000
+
+
+123456 >>
+012345
+001234
+000123
+000012
+000001
+000000
+
+
+      123456 <<
+     1234560 <<
+    12345600 <<
+   123456000 <<
+
+
+
+
+
+ vv
+12345 -> [do some stuff] -> 23
+.MM..
+02300
+00230
+00023
+   ^^
+
+To extract individual numbers from inside a value, mask and shift.
+
+
+
+
+    # elif instruction_register == MULT:
+            #     # set the value at gp_register[operand_a] equal to gp_register[operand_a] * gp_register[operand_b]
+            #     gp_register[operand_a] = gp_register[operand_a] * gp_register[operand_b]
+            #     self.pc += 3 
+
+              # if len(sys.argv) != 2:
+        #     print("usage: comp.py filename")
+        #     sys.exit(1)
+
+        # try:
+        #     address = 0
+
+        #     run_file = sys.argv[1]
+
+        #     with open(run_file) as f:
+        #         for line in f:
+        #             t = line.split('#')
+        #             n = t[0].strip()
+
+        #             if n == '':
+        #                 continue
+
+        #             try:
+        #                 n = int(n, 2)
+        #             except ValueError:
+        #                 print(f"Invalid number '{n}'")
+        #                 sys.exit(1)
+
+        #             memory[address] = n
+        #             address += 1
+
+        # except FileNotFoundError:
+        #     print(f"File not found: {sys.argv[1]}")
+        #     sys.exit(2)
+
+
+

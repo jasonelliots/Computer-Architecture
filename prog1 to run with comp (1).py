@@ -1,0 +1,7 @@
+1  # PRINT_BEEJ  Address 0
+3  # SAVE_REG R1,37
+1
+37
+4  # PRINT_REG R1
+1
+2  # HALT

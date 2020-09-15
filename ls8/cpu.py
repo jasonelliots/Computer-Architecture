@@ -22,23 +22,54 @@ class CPU:
     def load(self):
         """Load a program into memory."""
 
-        address = 0
+        if len(sys.argv) != 2:
+            print("usage: comp.py filename")
+            sys.exit(1)
 
-        # For now, we've just hardcoded a program:
+        try:
+            address = 0
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000, # the slow we want to load into 
-            0b00001000, # the value we want to load 
-            0b01000111, # PRN R0
-            0b00000000, # the slot we want to print 
-            0b00000001, # HLT
-        ]
+            run_file = sys.argv[1]
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+            with open(run_file) as f:
+                for line in f:
+                    t = line.split('#')
+                    n = t[0].strip()
+
+                    if n == '':
+                        continue
+                    
+                    try:
+                        # change string into binary integer 
+                        n = int(n, 2)
+                    except ValueError:
+                        print(f"Invalid number {n}")
+                        sys.exit(1)
+
+                    self.ram[address] = n
+                    address += 1
+
+        except FileNotFoundError:
+            print(f"File not found: {sys.argv[1]}")
+            sys.exit(2)
+
+        # address = 0
+
+        # # For now, we've just hardcoded a program:
+
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010, # LDI R0,8
+        #     0b00000000, # the slow we want to load into 
+        #     0b00001000, # the value we want to load 
+        #     0b01000111, # PRN R0
+        #     0b00000000, # the slot we want to print 
+        #     0b00000001, # HLT
+        # ]
+
+        # for instruction in program:
+        #     self.ram[address] = instruction
+        #     address += 1
 
 
     def alu(self, op, reg_a, reg_b):
@@ -75,6 +106,7 @@ class CPU:
         HLT = 0b00000001 # halt, stop the program 
         LDI = 0b10000010 # sets a specified register to a specified value
         PRN = 0b01000111 # Print numeric value stored in the given register
+        MULT = 0b10100010 # multiply value at operand_a by value at operand_b and put that into slot at operand_a
 
         running = True 
 
@@ -96,4 +128,9 @@ class CPU:
             elif instruction_register == PRN: 
                 print(self.gp_register[operand_a])
                 self.pc += 2
+
+            elif instruction_register == MULT:
+                # set the value at gp_register[operand_a] equal to gp_register[operand_a] * gp_register[operand_b]
+                self.gp_register[operand_a] = self.gp_register[operand_a] * self.gp_register[operand_b]
+                self.pc += 3 
             
