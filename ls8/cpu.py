@@ -9,7 +9,7 @@ class CPU:
         """Construct a new CPU."""
         self.ram = [0] * 256 # memory to hold 256 bytes 
         self.gp_register = [0] * 8 # empty general purpose register 
-        self.pc = 0 # Program Counter, address of the currently executing instruction 
+        self.pc = 0 # Program Counter, address of the currently executing instruction - counter for running process 
 
     def ram_read(self, address):
         # accepts the address to read and return the value stored there.
@@ -27,6 +27,7 @@ class CPU:
             sys.exit(1)
 
         try:
+            # counter for loading process 
             address = 0
 
             run_file = sys.argv[1]
@@ -38,7 +39,7 @@ class CPU:
 
                     if n == '':
                         continue
-                    
+
                     try:
                         # change string into binary integer 
                         n = int(n, 2)
@@ -46,6 +47,7 @@ class CPU:
                         print(f"Invalid number {n}")
                         sys.exit(1)
 
+                    # adding the binary value to the ram (memory)
                     self.ram[address] = n
                     address += 1
 
@@ -75,8 +77,10 @@ class CPU:
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
-        if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
+        if op == "MULT":
+            self.gp_register[reg_a] *= self.gp_register[reg_b]
+        elif op == "ADD":
+            self.gp_register[reg_a] += self.gp_register[reg_b]
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
@@ -117,20 +121,28 @@ class CPU:
             operand_a = self.ram_read(self.pc + 1) # the slot we want to load into 
             operand_b = self.ram_read(self.pc + 2) # the value we want to load 
 
+            # dynamically coding in how far to move counter (pc)
+            number_of_operands = (instruction_register & 0b11000000) >> 6
+            how_far_to_move_pc = number_of_operands + 1
+
             if instruction_register == HLT:
                 running == False
-                self.pc += 1 
+                self.pc += how_far_to_move_pc 
             
             elif instruction_register == LDI:
                 self.gp_register[operand_a] = operand_b
-                self.pc += 3 
+                self.pc += how_far_to_move_pc 
             
             elif instruction_register == PRN: 
                 print(self.gp_register[operand_a])
-                self.pc += 2
+                self.pc += how_far_to_move_pc
 
             elif instruction_register == MULT:
                 # set the value at gp_register[operand_a] equal to gp_register[operand_a] * gp_register[operand_b]
-                self.gp_register[operand_a] = self.gp_register[operand_a] * self.gp_register[operand_b]
-                self.pc += 3 
+                # self.gp_register[operand_a] = self.gp_register[operand_a] * self.gp_register[operand_b]
+                self.alu("MULT", operand_a, operand_b)
+                self.pc += how_far_to_move_pc 
+
+
+	# pc += how_far_to_move_pc
             
