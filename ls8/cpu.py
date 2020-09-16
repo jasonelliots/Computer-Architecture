@@ -10,6 +10,7 @@ class CPU:
         self.ram = [0] * 256 # memory to hold 256 bytes 
         self.gp_register = [0] * 8 # empty general purpose register 
         self.pc = 0 # Program Counter, address of the currently executing instruction - counter for running process 
+        self.sp = 7 
 
     def ram_read(self, address):
         # accepts the address to read and return the value stored there.
@@ -111,6 +112,8 @@ class CPU:
         LDI = 0b10000010 # sets a specified register to a specified value
         PRN = 0b01000111 # Print numeric value stored in the given register
         MULT = 0b10100010 # multiply value at operand_a by value at operand_b and put that into slot at operand_a
+        PUSH = 0b01000101
+        POP = 0b01000110
 
         running = True 
 
@@ -132,6 +135,8 @@ class CPU:
             elif instruction_register == LDI:
                 self.gp_register[operand_a] = operand_b
                 self.pc += how_far_to_move_pc 
+
+                print(f'this is ldi{self.gp_register[operand_a]}')
             
             elif instruction_register == PRN: 
                 print(self.gp_register[operand_a])
@@ -143,6 +148,43 @@ class CPU:
                 self.alu("MULT", operand_a, operand_b)
                 self.pc += how_far_to_move_pc 
 
+            elif instruction_register == PUSH:
+                # Decrement SP - stack pointer 
+                self.gp_register[self.sp] -= 1
 
-	# pc += how_far_to_move_pc
+                # Get the reg num to push
+                reg_num = operand_a
+
+                # Get the value to push
+                value = self.gp_register[reg_num]
+
+                # Copy the value to the SP address
+                top_of_stack_addr = self.gp_register[self.sp]
+                self.ram[top_of_stack_addr] = value
+
+                self.pc += how_far_to_move_pc
+
+                print(f'this is push{self.gp_register[operand_a]}')
+
+            elif instruction_register == POP:
+                # Get reg to pop into
+                reg_num = operand_a
+
+                # Get the top of stack addr
+                top_of_stack_addr = self.gp_register[self.sp]
+
+                # Get the value at the top of the stack
+                value = self.ram[top_of_stack_addr]
+
+                # Store the value in the register
+                self.gp_register[reg_num] = value
+
+                # Increment the SP
+                self.gp_register[self.sp] += 1
+
+                self.pc += how_far_to_move_pc
+
+                print(f'this is pop{self.gp_register[operand_a]}')
+
+
             
