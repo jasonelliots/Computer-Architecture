@@ -153,12 +153,11 @@ class CPU:
                 self.gp_register[self.sp] -= 1
 
                 # Get the reg num to push
-                reg_num = operand_a
 
                 # Get the value to push
-                value = self.gp_register[reg_num]
+                value = self.gp_register[operand_a]
 
-                # Copy the value to the SP address
+                # Copy the value to the SP address - corresponds to an index in ram 
                 top_of_stack_addr = self.gp_register[self.sp]
                 self.ram[top_of_stack_addr] = value
 
@@ -168,16 +167,15 @@ class CPU:
 
             elif instruction_register == POP:
                 # Get reg to pop into
-                reg_num = operand_a
 
-                # Get the top of stack addr
+                # Get the top of stack addr - corresponds to index in ram 
                 top_of_stack_addr = self.gp_register[self.sp]
 
                 # Get the value at the top of the stack
                 value = self.ram[top_of_stack_addr]
 
                 # Store the value in the register
-                self.gp_register[reg_num] = value
+                self.gp_register[operand_a] = value
 
                 # Increment the SP
                 self.gp_register[self.sp] += 1
