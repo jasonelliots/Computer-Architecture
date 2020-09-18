@@ -223,27 +223,28 @@ class CPU:
             elif instruction_register == CMP:
 
                 self.alu("CMP", operand_a, operand_b)
-                self.pc += 3
+                self.pc += how_far_to_move_pc
 
             elif instruction_register == JMP:
                 # jump to the address stored in the given register
-                # set the PC to the address stored in the given register
                 self.pc = self.gp_register[operand_a]
 
             elif instruction_register == JEQ:
 
-                # if E flag is 1 (equal), jump to the address stored in the given register
+                # if E flag is 1, jump to the address stored in the given register
                 if (self.fl & 0b00000001) == 1:
                     self.pc = self.gp_register[operand_a]
+                # otherwise, continue to next instruction 
                 else:
-                    self.pc += 2
+                    self.pc += how_far_to_move_pc
 
             elif instruction_register == JNE:
-                # if E flag is 0 (not equal) jump to the address stored in the given register
+                # if E flag is 0, jump to the address stored in the given register
                 if (self.fl & 0b00000001) == 0: 
                     self.pc = self.gp_register[operand_a]
+                # otherwise, continue to next instruction 
                 else:
-                    self.pc += 2
+                    self.pc += how_far_to_move_pc
 
             else:
                 print(
