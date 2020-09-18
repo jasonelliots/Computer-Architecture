@@ -20,6 +20,26 @@ class CPU:
         # accepts a value to write, and the address to write it to.
         self.ram[address] = value
 
+    def push_value(self, value):
+        # Decrement SP
+        self.gp_register[self.sp] -= 1
+
+        # Copy the value to the SP address
+        top_of_stack_addr = self.gp_register[self.sp]
+        self.ram[top_of_stack_addr] = value
+
+    def pop_value(self):
+        # Get the top of stack addr
+        top_of_stack_addr = self.gp_register[self.sp]
+
+        # Get the value at the top of the stack
+        value = self.ram[top_of_stack_addr]
+
+        # Increment the SP
+        self.gp_register[self.sp] += 1
+
+        return value
+
     def load(self):
         """Load a program into memory."""
 
@@ -114,11 +134,15 @@ class CPU:
         MULT = 0b10100010 # multiply value at operand_a by value at operand_b and put that into slot at operand_a
         PUSH = 0b01000101
         POP = 0b01000110
+        CALL = 0b01010000
+        RET = 0b00010001
+        ADD = 0b10100000
 
         running = True 
 
         while running:
-
+     
+            # returns the value in ram at the pc address 
             instruction_register = self.ram_read(self.pc)
 
             operand_a = self.ram_read(self.pc + 1) # the slot we want to load into 
@@ -128,9 +152,11 @@ class CPU:
             number_of_operands = (instruction_register & 0b11000000) >> 6
             how_far_to_move_pc = number_of_operands + 1
 
+            print(bin(instruction_register), 'ir')
+
             if instruction_register == HLT:
-                running == False
-                self.pc += how_far_to_move_pc 
+                running = False
+                # self.pc += how_far_to_move_pc 
             
             elif instruction_register == LDI:
                 self.gp_register[operand_a] = operand_b
@@ -146,6 +172,12 @@ class CPU:
                 # set the value at gp_register[operand_a] equal to gp_register[operand_a] * gp_register[operand_b]
                 # self.gp_register[operand_a] = self.gp_register[operand_a] * self.gp_register[operand_b]
                 self.alu("MULT", operand_a, operand_b)
+                self.pc += how_far_to_move_pc 
+
+            elif instruction_register == ADD:
+                # set the value at gp_register[operand_a] equal to gp_register[operand_a] * gp_register[operand_b]
+                # self.gp_register[operand_a] = self.gp_register[operand_a] * self.gp_register[operand_b]
+                self.alu("ADD", operand_a, operand_b)
                 self.pc += how_far_to_move_pc 
 
             elif instruction_register == PUSH:
@@ -183,6 +215,58 @@ class CPU:
                 self.pc += how_far_to_move_pc
 
                 print(f'this is pop{self.gp_register[operand_a]}')
+
+            elif instruction_register == RET:
+                # pop the return address off the stack
+                top_of_stack_add = self.gp_register[self.sp]
+              
+                return_address = self.ram[top_of_stack_add]
+                self.gp_register[self.sp] += 1
+                # store in the PC
+                self.pc = return_address
+
+                # self.pc = self.ram[self.sp]
+                # self.sp += 1
+            
+            elif instruction_register == CALL:
+
+                # return_address = self.pc + 2
+                # self.sp -= 1
+                # register = self.ram[self.pc + 1]
+                # self.ram[self.sp] = return_address
+                # self.pc = self.gp_register[register]
+                # print(self.gp_register)
+                # # Compute the return addr
+                # return_addr = self.pc + 2
+
+                # # Push return addr on stack
+                # self.push_value(return_addr)
+
+                # # Get the value from the operand reg
+                # reg_num = self.ram[self.pc + 1]
+                # value = self.gp_register[reg_num]
+
+                # # Set the pc to that value
+                # self.pc = value
+
+                # print("sp", self.sp)
+                # print("pc", self.pc)
+                # print("reg", self.gp_register)
+
+                # push command after CALL onto the stack
+                
+                return_address = self.pc + 2
+              
+                # push if on the stack
+                # decrement stack pointer
+                self.gp_register[self.sp] -= 1
+                top_of_stack_add = self.gp_register[self.sp]
+                # put return address on the stack
+                self.ram[top_of_stack_add] = return_address
+                # set the PC to the subroutine address
+                subroutine_address = self.gp_register[operand_a]
+                self.pc = subroutine_address
+
 
 
             
