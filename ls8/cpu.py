@@ -11,6 +11,7 @@ class CPU:
         self.gp_register = [0] * 8 # empty general purpose register 
         self.pc = 0 # Program Counter, address of the currently executing instruction - counter for running process 
         self.sp = 7 
+        self.fl = 0b00000000
 
     def ram_read(self, address):
         # accepts the address to read and return the value stored there.
@@ -19,26 +20,6 @@ class CPU:
     def ram_write(self, value, address):
         # accepts a value to write, and the address to write it to.
         self.ram[address] = value
-
-    def push_value(self, value):
-        # Decrement SP
-        self.gp_register[self.sp] -= 1
-
-        # Copy the value to the SP address
-        top_of_stack_addr = self.gp_register[self.sp]
-        self.ram[top_of_stack_addr] = value
-
-    def pop_value(self):
-        # Get the top of stack addr
-        top_of_stack_addr = self.gp_register[self.sp]
-
-        # Get the value at the top of the stack
-        value = self.ram[top_of_stack_addr]
-
-        # Increment the SP
-        self.gp_register[self.sp] += 1
-
-        return value
 
     def load(self):
         """Load a program into memory."""
@@ -102,7 +83,15 @@ class CPU:
             self.gp_register[reg_a] *= self.gp_register[reg_b]
         elif op == "ADD":
             self.gp_register[reg_a] += self.gp_register[reg_b]
-        #elif op == "SUB": etc
+        elif op == "CMP":
+            if self.gp_register[reg_a] < self.gp_register[reg_b]:
+                self.fl = 0b00000100
+                # reg a greater than reg b
+            elif self.gp_register[reg_a] > self.gp_register[reg_b]:
+                self.fl = 0b00000010
+            # otherwise, they are equal
+            else:
+                self.fl = 0b00000001
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -137,6 +126,12 @@ class CPU:
         CALL = 0b01010000
         RET = 0b00010001
         ADD = 0b10100000
+        CMP = 0b10100111  # compare the values in two registers (operand_a and operand_b)
+        JMP = 0b01010100  # jump to the address stored in the given register
+        # if 'equal' flag is set (true), jump to the address stored in given register
+        JEQ = 0b01010101
+        # if 'E' flag is clear (false, 0) jump to the address stored in the given register
+        JNE = 0b01010110
 
         running = True 
 
@@ -145,46 +140,37 @@ class CPU:
             # returns the value in ram at the pc address 
             instruction_register = self.ram_read(self.pc)
 
-            operand_a = self.ram_read(self.pc + 1) # the slot we want to load into 
-            operand_b = self.ram_read(self.pc + 2) # the value we want to load 
+            operand_a = self.ram_read(self.pc + 1) 
+            operand_b = self.ram_read(self.pc + 2)
 
             # dynamically coding in how far to move counter (pc)
             number_of_operands = (instruction_register & 0b11000000) >> 6
             how_far_to_move_pc = number_of_operands + 1
 
-            print(bin(instruction_register), 'ir')
-
             if instruction_register == HLT:
                 running = False
-                # self.pc += how_far_to_move_pc 
-            
+
             elif instruction_register == LDI:
                 self.gp_register[operand_a] = operand_b
                 self.pc += how_far_to_move_pc 
-
-                print(f'this is ldi{self.gp_register[operand_a]}')
             
             elif instruction_register == PRN: 
                 print(self.gp_register[operand_a])
                 self.pc += how_far_to_move_pc
 
             elif instruction_register == MULT:
-                # set the value at gp_register[operand_a] equal to gp_register[operand_a] * gp_register[operand_b]
-                # self.gp_register[operand_a] = self.gp_register[operand_a] * self.gp_register[operand_b]
+                
                 self.alu("MULT", operand_a, operand_b)
                 self.pc += how_far_to_move_pc 
 
             elif instruction_register == ADD:
-                # set the value at gp_register[operand_a] equal to gp_register[operand_a] * gp_register[operand_b]
-                # self.gp_register[operand_a] = self.gp_register[operand_a] * self.gp_register[operand_b]
+
                 self.alu("ADD", operand_a, operand_b)
                 self.pc += how_far_to_move_pc 
 
             elif instruction_register == PUSH:
                 # Decrement SP - stack pointer 
                 self.gp_register[self.sp] -= 1
-
-                # Get the reg num to push
 
                 # Get the value to push
                 value = self.gp_register[operand_a]
@@ -195,10 +181,7 @@ class CPU:
 
                 self.pc += how_far_to_move_pc
 
-                print(f'this is push{self.gp_register[operand_a]}')
-
             elif instruction_register == POP:
-                # Get reg to pop into
 
                 # Get the top of stack addr - corresponds to index in ram 
                 top_of_stack_addr = self.gp_register[self.sp]
@@ -214,8 +197,6 @@ class CPU:
 
                 self.pc += how_far_to_move_pc
 
-                print(f'this is pop{self.gp_register[operand_a]}')
-
             elif instruction_register == RET:
                 # pop the return address off the stack
                 top_of_stack_add = self.gp_register[self.sp]
@@ -225,39 +206,11 @@ class CPU:
                 # store in the PC
                 self.pc = return_address
 
-                # self.pc = self.ram[self.sp]
-                # self.sp += 1
-            
             elif instruction_register == CALL:
-
-                # return_address = self.pc + 2
-                # self.sp -= 1
-                # register = self.ram[self.pc + 1]
-                # self.ram[self.sp] = return_address
-                # self.pc = self.gp_register[register]
-                # print(self.gp_register)
-                # # Compute the return addr
-                # return_addr = self.pc + 2
-
-                # # Push return addr on stack
-                # self.push_value(return_addr)
-
-                # # Get the value from the operand reg
-                # reg_num = self.ram[self.pc + 1]
-                # value = self.gp_register[reg_num]
-
-                # # Set the pc to that value
-                # self.pc = value
-
-                # print("sp", self.sp)
-                # print("pc", self.pc)
-                # print("reg", self.gp_register)
-
-                # push command after CALL onto the stack
                 
+                # the address we want to come back to after the call 
                 return_address = self.pc + 2
               
-                # push if on the stack
                 # decrement stack pointer
                 self.gp_register[self.sp] -= 1
                 top_of_stack_add = self.gp_register[self.sp]
@@ -267,6 +220,33 @@ class CPU:
                 subroutine_address = self.gp_register[operand_a]
                 self.pc = subroutine_address
 
+            elif instruction_register == CMP:
 
+                self.alu("CMP", operand_a, operand_b)
+                self.pc += 3
 
+            elif instruction_register == JMP:
+                # jump to the address stored in the given register
+                # set the PC to the address stored in the given register
+                self.pc = self.gp_register[operand_a]
+
+            elif instruction_register == JEQ:
+
+                # if E flag is 1 (equal), jump to the address stored in the given register
+                if (self.fl & 0b00000001) == 1:
+                    self.pc = self.gp_register[operand_a]
+                else:
+                    self.pc += 2
+
+            elif instruction_register == JNE:
+                # if E flag is 0 (not equal) jump to the address stored in the given register
+                if (self.fl & 0b00000001) == 0: 
+                    self.pc = self.gp_register[operand_a]
+                else:
+                    self.pc += 2
+
+            else:
+                print(
+                    F" unknown instruction {instruction_register} at address {self.pc}")
+                sys.exit()  # halts the program wherever it is
             
